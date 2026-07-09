@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BRCASAS · Painel de Fluxo de Caixa do Portfólio</title>
+<style>
+  :root{
+    --bg:#0e1524; --bg2:#141d31; --card:#182238; --card2:#1e2a44;
+    --line:#26344f; --txt:#e8eefc; --mut:#9fb0d0; --mut2:#6f82a6;
+    --brand:#4f8cff; --brand2:#7aa8ff;
+    --green:#2fbf71; --greenb:#173a2b;
+    --red:#f2555a; --redb:#3a1a1e;
+    --amber:#f2b23e; --amberb:#3a2e12;
+    --shadow:0 6px 24px rgba(0,0,0,.35);
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    background:linear-gradient(180deg,#0b1120,#0e1524 40%);color:var(--txt);
+    min-height:100vh;font-size:15px;line-height:1.45;
+  }
+  a{color:var(--brand2)}
+  header.top{
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    padding:18px 24px;background:rgba(20,29,49,.75);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;
+  }
+  .logo{
+    width:42px;height:42px;border-radius:11px;flex:none;
+    background:linear-gradient(135deg,var(--brand),#8b5cf6);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;
+    box-shadow:var(--shadow);letter-spacing:-1px;
+  }
+  .htitle{display:flex;flex-direction:column;gap:2px}
+  .htitle b{font-size:17px;letter-spacing:.2px}
+  .htitle span{color:var(--mut);font-size:12.5px}
+  .htools{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  button{
+    font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card2);
+    color:var(--txt);padding:8px 13px;border-radius:10px;transition:.15s;
+  }
+  button:hover{border-color:var(--brand);background:#22314e}
+  button.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+  button.primary:hover{background:#3f79ea}
+  button.ghost{background:transparent}
+  button.danger{color:var(--red);border-color:#4a2530}
+  button.danger:hover{background:var(--redb)}
+  button.sm{padding:5px 9px;font-size:12.5px;border-radius:8px}
+
+  nav.tabs{display:flex;gap:4px;padding:12px 24px 0;flex-wrap:wrap}
+  nav.tabs button{
+    border:none;border-bottom:2px solid transparent;background:transparent;color:var(--mut);
+    border-radius:8px 8px 0 0;padding:9px 15px;font-weight:600;
+  }
+  nav.tabs button:hover{color:var(--txt);background:var(--card)}
+  nav.tabs button.active{color:var(--txt);border-bottom-color:var(--brand);background:var(--card)}
+
+  main{padding:22px 24px 60px;max-width:1320px;margin:0 auto}
+  .tab{display:none}
+  .tab.active{display:block;animation:fade .2s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  h2.sec{font-size:15px;text-transform:uppercase;letter-spacing:1.2px;color:var(--mut);
+    margin:26px 0 12px;font-weight:700}
+  h2.sec:first-child{margin-top:4px}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+  .kpi{
+    background:linear-gradient(160deg,var(--card),var(--bg2));border:1px solid var(--line);
+    border-radius:var(--r);padding:16px 17px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .kpi::after{content:"";position:absolute;right:-30px;top:-30px;width:90px;height:90px;border-radius:50%;
+    background:radial-gradient(circle,rgba(79,140,255,.18),transparent 70%)}
+  .kpi .lab{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.7px}
+  .kpi .val{font-size:25px;font-weight:800;margin-top:6px;letter-spacing:-.5px}
+  .kpi .sub{color:var(--mut2);font-size:12px;margin-top:3px}
+  .kpi.good .val{color:var(--green)}
+  .kpi.warn .val{color:var(--amber)}
+
+  .cards{display:grid;grid-template-columns:1fr;gap:16px;margin-top:4px}
+  @media(min-width:900px){.cards.two{grid-template-columns:1fr 1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:18px;box-shadow:var(--shadow)}
+  .panel h3{margin:0 0 14px;font-size:14px;letter-spacing:.3px}
+  .panel h3 small{color:var(--mut2);font-weight:400;font-size:12px;margin-left:6px}
+
+  .bars{display:flex;flex-direction:column;gap:9px}
+  .barrow{display:grid;grid-template-columns:120px 1fr auto;align-items:center;gap:10px}
+  .barrow .name{color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track{background:var(--bg);border-radius:7px;height:20px;overflow:hidden;position:relative;border:1px solid var(--line)}
+  .fill{height:100%;border-radius:7px 0 0 7px;background:linear-gradient(90deg,var(--brand),#8b5cf6);transition:width .5s}
+  .fill.g{background:linear-gradient(90deg,#22a862,#2fbf71)}
+  .fill.r{background:linear-gradient(90deg,#c9434a,#f2555a)}
+  .fill.a{background:linear-gradient(90deg,#d99321,#f2b23e)}
+  .barrow .num{font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;min-width:78px;text-align:right}
+
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+  table{border-collapse:collapse;width:100%;min-width:920px;font-size:13.5px}
+  thead th{background:var(--card2);color:var(--mut);text-align:right;padding:11px 12px;
+    font-weight:600;white-space:nowrap;border-bottom:1px solid var(--line);position:sticky;top:0}
+  thead th:first-child,tbody td:first-child{text-align:left;position:sticky;left:0;background:var(--card2)}
+  tbody td:first-child{background:var(--card)}
+  tbody td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  tbody tr:hover td{background:#1b2743}
+  tbody tr:hover td:first-child{background:#1b2743}
+  tfoot td{padding:11px 12px;text-align:right;font-weight:800;border-top:2px solid var(--line);
+    background:var(--card2);font-variant-numeric:tabular-nums}
+  tfoot td:first-child{text-align:left}
+  .uf{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:6px;
+    padding:1px 6px;font-size:11px;color:var(--mut);margin-left:6px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:700}
+  .pill.g{background:var(--greenb);color:#5fe0a0}
+  .pill.a{background:var(--amberb);color:#f2c96b}
+  .pill.r{background:var(--redb);color:#ff8a8f}
+
+  .obragrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+  .obracard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+  .obracard .oh{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .obracard .oh b{font-size:16px}
+  .obracard .oh .idx{width:24px;height:24px;border-radius:7px;background:var(--card2);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mut);flex:none}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+  .field{display:flex;flex-direction:column;gap:3px}
+  .field.full{grid-column:1 / -1}
+  .field label{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}
+  .field input,.field select{background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:8px;
+    padding:7px 9px;font:inherit;font-size:13.5px;width:100%}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--brand)}
+  .field input[readonly]{opacity:.7;cursor:not-allowed;background:var(--bg2)}
+  .obracard .ofoot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px}
+  .calcbox{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:12.5px}
+  .calcbox b{color:var(--green);font-size:15px}
+
+  .progline{display:grid;grid-template-columns:130px 1fr 90px;gap:10px;align-items:center;margin:7px 0}
+  .miniprog{background:var(--bg);border:1px solid var(--line);border-radius:20px;height:14px;overflow:hidden}
+  .miniprog i{display:block;height:100%;background:linear-gradient(90deg,var(--green),#5fe0a0)}
+
+  .note{color:var(--mut2);font-size:12.5px;margin-top:8px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+  .toolbar .spacer{flex:1}
+  .searchbox,select.sel{background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:8px 11px;font:inherit;min-width:180px}
+  .searchbox:focus,select.sel:focus{outline:none;border-color:var(--brand)}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);
+    background:var(--card2);border:1px solid var(--brand);color:var(--txt);padding:11px 18px;border-radius:11px;
+    box-shadow:var(--shadow);opacity:0;transition:.25s;z-index:60;font-size:14px}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .prem-input{width:120px}
+  .flexlist{display:flex;flex-direction:column;gap:10px}
+  .kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .kv:last-child{border-bottom:none}
+  .kv span{color:var(--mut)}
+  .kv b{font-variant-numeric:tabular-nums}
+  details.help{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:4px 16px;margin-top:18px}
+  details.help summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--mut)}
+  details.help ul{margin:0 0 14px;padding-left:18px;color:var(--mut);line-height:1.7}
+  .foot{color:var(--mut2);font-size:12px;text-align:center;margin-top:30px;padding-top:16px;border-top:1px solid var(--line)}
+
+  /* cash curve chart */
+  .chartwrap{width:100%;overflow-x:auto}
+  svg.chart{display:block;width:100%;min-width:640px;height:340px}
+  svg.chart text{fill:var(--mut2);font-size:11px}
+  svg.chart .axis{stroke:var(--line);stroke-width:1}
+  svg.chart .zero{stroke:#3a4a6b;stroke-width:1;stroke-dasharray:4 4}
+  svg.chart .area{fill:url(#gradPos);opacity:.9}
+  svg.chart .areaNeg{fill:url(#gradNeg);opacity:.9}
+  svg.chart .lineP{fill:none;stroke:var(--brand2);stroke-width:2}
+  svg.chart .trough{fill:var(--red)}
+  .modelstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:8px}
+  .mstat{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .mstat .l{font-size:11px;color:var(--mut2);text-transform:uppercase;letter-spacing:.5px}
+  .mstat .v{font-size:17px;font-weight:700;margin-top:2px}
+  .mstat .v small{font-size:11px;color:var(--mut2);font-weight:400}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:8px}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo">BR</div>
+  <div class="htitle">
+    <b>BRCASAS · Fluxo de Caixa do Portfólio</b>
+    <span>Incorporação MCMV / Crédito Associativo · Já incorrido × A incorrer</span>
+  </div>
+  <div class="htools">
+    <button class="sm" onclick="exportJSON()">⭳ Exportar</button>
+    <button class="sm" onclick="document.getElementById('importFile').click()">⭱ Importar</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
+    <button class="sm danger" onclick="resetData()">↺ Restaurar padrão</button>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="active" data-tab="overview">Visão geral</button>
+  <button data-tab="obras">Obras &amp; premissas</button>
+  <button data-tab="curva">Curva de caixa</button>
+  <button data-tab="acomp">Acompanhamento</button>
+  <button data-tab="premissas">Parâmetros</button>
+</nav>
+
+<main>
+  <!-- OVERVIEW -->
+  <section class="tab active" id="tab-overview">
+    <h2 class="sec">Consolidado do portfólio <span id="dbLabel" style="text-transform:none;font-weight:400;color:var(--mut2)"></span></h2>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="cards two">
+      <div class="panel">
+        <h3>Resultado líquido por obra <small>R$ milhões (nominal, calculado)</small></h3>
+        <div class="bars" id="barResultado"></div>
+      </div>
+      <div class="panel">
+        <h3>Exposição máxima de caixa por obra <small>pico de capital a investir · R$ mi</small></h3>
+        <div class="bars" id="barExposicao"></div>
+      </div>
+    </div>
+
+    <div class="cards two" style="margin-top:16px">
+      <div class="panel">
+        <h3>Receita × Saídas a incorrer <small>R$ mi</small></h3>
+        <div class="bars" id="barRecSai"></div>
+      </div>
+      <div class="panel">
+        <h3>Unidades por obra <small>total consolidado</small></h3>
+        <div class="bars" id="barUnid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OBRAS / PREMISSAS -->
+  <section class="tab" id="tab-obras">
+    <h2 class="sec">Quadro resumo — clique nos valores para editar</h2>
+    <div class="tablewrap">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th>Obra</th><th>Un.</th><th>VGV</th><th>Receita</th>
+            <th>Saídas incorrer</th><th>Já incorrido</th><th>Resultado</th>
+            <th>Exposição</th><th>TIR a.a.</th><th>Múltiplo</th><th>Obras</th>
+          </tr>
+        </thead>
+        <tbody id="tblBody"></tbody>
+        <tfoot id="tblFoot"></tfoot>
+      </table>
+    </div>
+    <p class="note">Valores em R$ milhões (base nominal). <b>Resultado = Receita − Saídas a incorrer − Já incorrido</b> e <b>Múltiplo = Resultado ÷ Exposição + 1</b> — recalculados automaticamente ao editar as premissas.</p>
+
+    <h2 class="sec">Editar obras &amp; inserir novas premissas</h2>
+    <div class="toolbar">
+      <button class="primary" onclick="addObra()">＋ Nova obra</button>
+      <input class="searchbox" id="obraSearch" placeholder="Filtrar obra…" oninput="renderObras()">
+      <div class="spacer"></div>
+      <span class="note" id="editHint"></span>
+    </div>
+    <div class="obragrid" id="obraGrid"></div>
+  </section>
+
+  <!-- CURVA DE CAIXA -->
+  <section class="tab" id="tab-curva">
+    <h2 class="sec">Curva de exposição de caixa no tempo</h2>
+    <div class="toolbar">
+      <select class="sel" id="curvaSel" onchange="renderCurva()"></select>
+      <div class="spacer"></div>
+      <span class="note">Modelo ilustrativo (curva S) gerado a partir das premissas de cada obra.</span>
+    </div>
+    <div class="panel">
+      <h3 id="curvaTitle">Caixa acumulado (nominal)</h3>
+      <div class="chartwrap"><svg class="chart" id="curvaSvg" viewBox="0 0 900 340" preserveAspectRatio="none"></svg></div>
+      <div class="legend">
+        <span><i style="background:var(--brand2)"></i>Caixa acumulado (a incorrer)</span>
+        <span><i style="background:var(--red)"></i>Pico de exposição (modelo)</span>
+        <span><i style="background:#3a4a6b"></i>Linha zero</span>
+      </div>
+      <div class="modelstats" id="curvaStats"></div>
+      <p class="note">A curva distribui as <b>saídas</b> ao longo do cronograma de obras (curva S) e a <b>receita</b> ao longo das vendas + prazo de repasse CEF. O pico negativo estima a <b>exposição máxima</b>; a TIR do modelo anualiza a IRR do fluxo mensal. São estimativas de forma/timing — os valores oficiais do relatório continuam nos KPIs e no quadro resumo.</p>
+    </div>
+  </section>
+
+  <!-- ACOMPANHAMENTO -->
+  <section class="tab" id="tab-acomp">
+    <h2 class="sec">Acompanhamento de execução — previsto × realizado</h2>
+    <div class="toolbar">
+      <div class="field" style="max-width:180px">
+        <label>Mês de referência</label>
+        <input class="searchbox" id="mesRef" value="" placeholder="ex.: jun/26" onchange="setMesRef(this.value)">
+      </div>
+      <span class="note">Usado para calcular a <b>meta de vendas acumulada</b> (velocidade × meses desde o início das vendas).</span>
+    </div>
+    <div class="kpis" id="acompKpis"></div>
+    <div class="panel" style="margin-top:16px">
+      <h3>Avanço por obra <small>informe o % de obra, unidades vendidas e caixa realizado</small></h3>
+      <div class="tablewrap" style="border:none;box-shadow:none">
+        <table style="min-width:980px">
+          <thead>
+            <tr><th>Obra</th><th>% Obra</th><th>Un. vendidas</th><th>Meta acum.</th><th>Receita realiz.</th><th>Saídas realiz.</th><th>Vendas × meta</th><th>Result. realiz.</th></tr>
+          </thead>
+          <tbody id="acompBody"></tbody>
+        </table>
+      </div>
+      <p class="note">Receita/Saídas realizadas em R$ mi. A barra "Vendas × meta" compara as unidades vendidas com a meta acumulada até o mês de referência. Resultado realizado = Receita realizada − Saídas realizadas.</p>
+    </div>
+  </section>
+
+  <!-- PARÂMETROS -->
+  <section class="tab" id="tab-premissas">
+    <h2 class="sec">Parâmetros globais &amp; premissas do modelo</h2>
+    <div class="cards two">
+      <div class="panel">
+        <h3>Premissas gerais <small>editáveis</small></h3>
+        <div class="frow" id="globalParams"></div>
+        <p class="note">Velocidade de vendas e repasse CEF alimentam a meta de vendas e a curva de caixa. Os demais são anotações do portfólio.</p>
+      </div>
+      <div class="panel">
+        <h3>Parâmetros do modelo de curva de caixa</h3>
+        <div class="frow">
+          <div class="field">
+            <label>Curva de obra (S) — inclinação</label>
+            <input inputmode="decimal" id="mp_obra" onchange="setModel('obraK',this.value)">
+          </div>
+          <div class="field">
+            <label>Espalhamento das vendas</label>
+            <input inputmode="decimal" id="mp_venda" onchange="setModel('vendaK',this.value)">
+          </div>
+          <div class="field">
+            <label>Repasse CEF (meses de defasagem)</label>
+            <input inputmode="numeric" id="mp_repasse" onchange="setModel('repasseLag',this.value)">
+          </div>
+          <div class="field">
+            <label>Cauda de vendas pós-obra (meses)</label>
+            <input inputmode="numeric" id="mp_tail" onchange="setModel('tailMeses',this.value)">
+          </div>
+        </div>
+        <p class="note">Inclinações maiores concentram os desembolsos/recebimentos no meio do período. Afeta apenas a aba "Curva de caixa".</p>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h3>Modelo de venda MCMV / Crédito Associativo</h3>
+      <div class="flexlist">
+        <div class="kv"><span>Pró-Soluto (cliente)</span><b>20%</b></div>
+        <div class="kv"><span>Parcela CEF do terreno</span><b>10%</b></div>
+        <div class="kv"><span>Financiamento CEF (ex-terreno)</span><b>70%</b></div>
+        <div class="kv"><span>Taxa de incorporação</span><b>3% do faturamento</b></div>
+        <div class="kv"><span>Tributação</span><b>RET (regime especial)</b></div>
+        <div class="kv"><span>Funding de obra</span><b>SAC (produção)</b></div>
+      </div>
+    </div>
+
+    <details class="help">
+      <summary>Metodologia — como separamos "já incorrido" de "a incorrer"</summary>
+      <ul>
+        <li><b>Corte na data-base</b> (01/06/2026), a partir do cronograma de desembolsos de cada projeto.</li>
+        <li><b>Já incorrido</b> — terreno/ITBI/registro pagos antes da data-base + projetos, aprovação e licenciamento.</li>
+        <li><b>A incorrer (saídas)</b> — construção, permuta financeira, comissões, impostos (RET), taxa de incorporação, custo da dívida (SAC), manutenção da SPE.</li>
+        <li><b>A incorrer (receita)</b> — ~100% da receita de vendas (vendas e repasses CEF ganham escala após a data-base).</li>
+        <li><b>Exposição máxima</b> — pico de caixa negativo: capital que ainda precisa ser investido antes do projeto virar superavitário.</li>
+        <li>Valores em <b>base nominal</b>, extraídos do Quadro Resumo – DRE (Nível Projeto) de cada relatório RExSoft.</li>
+      </ul>
+    </details>
+  </section>
+
+  <div class="foot">
+    BRCASAS · Painel de Fluxo de Caixa — dados salvos localmente no seu navegador (localStorage). Elaborado a partir dos relatórios RExSoft (data-base 08/06/2026).
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- Seed data: 9 obras ---------------- */
+const SEED = {
+  dataBase: "08/06/2026",
+  mesRef: "jun/26",
+  model: { obraK:8, vendaK:5, repasseLag:3, tailMeses:6 },
+  globals: {
+    "INCC anual (%)": "6,0",
+    "Velocidade de vendas (un./mês)": "35",
+    "Taxa SAC produção (% a.a.)": "12,0",
+    "Repasse CEF médio (meses)": "3",
+    "Data-base": "08/06/2026",
+    "Base de valores": "Nominal (R$)"
+  },
+  obras: [
+    {id:"mafra", nome:"Mafra", uf:"SC", unidades:320, vgv:72.0, receita:84.8, saidas:64.9, jaIncorrido:0.7, exposicao:7.5, tir:103.1, obras:"ago/26–abr/28",
+      pctObra:0, unidVend:0, recReal:0, saiReal:0},
+    {id:"pousoalegre", nome:"Pouso Alegre", uf:"MG", unidades:929, vgv:218.3, receita:266.9, saidas:202.4, jaIncorrido:1.2, exposicao:6.4, tir:119.6, obras:"dez/26–mai/29",
+      pctObra:0, unidVend:0, recReal:0, saiReal:0},
+    {id:"varginha", nome:"Varginha", uf:"MG", unidades:568, vgv:144.0, receita:179.6, saidas:131.4, jaIncorrido:2.2, exposicao:10.9, tir:110.4, obras:"jul/26–jul/28",
+      pctObra:0, unidVend:0, recReal:0, saiReal:0},
+    {id:"riopreto", nome:"Rio Preto", uf:"SP", unidades:762, vgv:267.7, receita:325.5, saidas:225.1, jaIncorrido:3.0, exposicao:8.5, tir:181.8, obras:"nov/26–nov/28",
+      pctObra:0, unidVend:0, recReal:0, saiReal:0},
+    {id:"vitoria", nome:"Vitória de Santo Antão", uf:"PE", unidades:742, vgv:174.4, receita:214.9, saidas:150.7, jaIncorrido:1.3, exposicao:8.4, tir:136.0, obras:"dez/26–jun/29",
+      pctObra:0, unidVend:0, recReal:0, saiReal:0},
+    {id:"barbacena", nome:"Barbacena", uf:"MG", unidades:404, vgv:94.9, receita:109.8, saidas:81.2, jaIncorrido:0.7, exposicao:5.7, tir:97.2, obras:"jul/27–jul/29",
+      pctObra:0, unidVend:0, recReal:0, saiReal:0},
+    {id:"aracruz", nome:"Aracruz", uf:"ES", unidades:720, vgv:215.3, receita:263.0, saidas:188.4, jaIncorrido:1.4, exposicao:8.0, tir:161.1, obras:"fev/27–jan/29",
+      pctObra:0, unidVend:0, recReal:0, saiReal:0},
+    {id:"campinas", nome:"Campinas", uf:"SP", unidades:838, vgv:222.1, receita:280.6, saidas:201.2, jaIncorrido:1.4, exposicao:7.5, tir:133.4, obras:"mai/27–out/29",
+      pctObra:0, unidVend:0, recReal:0, saiReal:0},
+    {id:"vespasiano", nome:"Vespasiano", uf:"MG", unidades:320, vgv:78.4, receita:87.2, saidas:66.5, jaIncorrido:1.0, exposicao:5.2, tir:87.3, obras:"dez/26–jul/28",
+      pctObra:0, unidVend:0, recReal:0, saiReal:0}
+  ]
+};
+
+const LS_KEY = "brcasas_fluxo_v1";
+let state = migrate(load());
+
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){ const d = JSON.parse(raw); if(d && d.obras) return d; }
+  }catch(e){}
+  return structuredClone(SEED);
+}
+function migrate(d){
+  if(!d.model) d.model = structuredClone(SEED.model);
+  ["obraK","vendaK","repasseLag","tailMeses"].forEach(k=>{ if(d.model[k]==null) d.model[k]=SEED.model[k]; });
+  if(!d.mesRef) d.mesRef = SEED.mesRef;
+  d.obras.forEach(o=>{ ["pctObra","unidVend","recReal","saiReal"].forEach(k=>{ if(o[k]==null) o[k]=0; }); });
+  return d;
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+
+/* ---------------- helpers ---------------- */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const num = v => { const n = parseFloat(String(v).replace(/\./g,'').replace(',','.')); return isNaN(n)?0:n; };
+function fmt(n, dec=1){ return (n||0).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+function fmtInt(n){ return Math.round(n||0).toLocaleString('pt-BR'); }
+function money(n){
+  if(Math.abs(n) >= 1000) return "R$ "+fmt(n/1000,2)+" bi";
+  return "R$ "+fmt(n,1)+" mi";
+}
+function resultado(o){ return o.receita - o.saidas - o.jaIncorrido; }
+function multiplo(o){ return o.exposicao>0 ? resultado(o)/o.exposicao + 1 : 0; }
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2200); }
+
+/* month parsing */
+const MESES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+function monthIndex(s){ // "ago/26" -> integer months
+  if(!s) return null;
+  s=s.trim().toLowerCase();
+  const mm=s.slice(0,3); const yy=s.match(/(\d{2,4})\s*$/);
+  const mi=MESES.indexOf(mm); if(mi<0||!yy) return null;
+  let y=parseInt(yy[1]); if(y<100) y+=2000;
+  return y*12+mi;
+}
+function idxToLabel(idx){ const y=Math.floor(idx/12), m=idx%12; return MESES[m]+"/"+String(y).slice(2); }
+function parseObras(str){
+  if(!str) return null;
+  const parts=str.split(/[–—-]/).map(x=>x.trim()).filter(Boolean);
+  if(parts.length<2) return null;
+  const a=monthIndex(parts[0]), b=monthIndex(parts[parts.length-1]);
+  if(a==null||b==null||b<a) return null;
+  return {start:a,end:b};
+}
+
+function totals(){
+  const t = {unidades:0,vgv:0,receita:0,saidas:0,jaIncorrido:0,resultado:0,exposicao:0,recReal:0,saiReal:0,unidVend:0};
+  state.obras.forEach(o=>{
+    t.unidades+=o.unidades; t.vgv+=o.vgv; t.receita+=o.receita; t.saidas+=o.saidas;
+    t.jaIncorrido+=o.jaIncorrido; t.resultado+=resultado(o); t.exposicao+=o.exposicao;
+    t.recReal+=(o.recReal||0); t.saiReal+=(o.saiReal||0); t.unidVend+=(o.unidVend||0);
+  });
+  return t;
+}
+
+/* ---------------- cash-flow model ---------------- */
+function logisticWeights(nMonths, k){
+  // returns array of nMonths incremental weights summing to 1 (S-curve)
+  if(nMonths<=0) return [];
+  if(nMonths===1) return [1];
+  const cdf=i=>1/(1+Math.exp(-k*((i/nMonths)-0.5)));
+  const w=[]; let sum=0;
+  for(let i=0;i<nMonths;i++){ const v=cdf(i+1)-cdf(i); w.push(v); sum+=v; }
+  return w.map(v=>v/sum);
+}
+function irrMonthly(cf){
+  const npv=r=>cf.reduce((s,c,i)=>s+c/Math.pow(1+r,i),0);
+  let lo=-0.9, hi=2.0;
+  if(npv(lo)*npv(hi)>0) return null;
+  for(let i=0;i<200;i++){ const mid=(lo+hi)/2; if(npv(lo)*npv(mid)<=0) hi=mid; else lo=mid; }
+  return (lo+hi)/2;
+}
+function buildCurve(obra, t0, T){
+  // returns {cum:[], out:[], inn:[], series over t0..T}, exposModel, tirModel
+  const n = T-t0+1;
+  const out=new Array(n).fill(0), inn=new Array(n).fill(0);
+  const sched=parseObras(obra.obras);
+  const m=state.model;
+  // já incorrido as outflow at t0
+  out[0]+=obra.jaIncorrido;
+  if(sched){
+    const s=Math.max(sched.start,t0), e=Math.min(sched.end,T);
+    const dur=Math.max(1,e-s+1);
+    const wOut=logisticWeights(dur, num(m.obraK)||8);
+    for(let i=0;i<dur;i++){ const idx=s+i-t0; if(idx>=0&&idx<n) out[idx]+=obra.saidas*wOut[i]; }
+    // receita over [start, end+tail+repasse]
+    const salesEnd=Math.min(T, sched.end + (parseInt(m.tailMeses)||0) + (parseInt(m.repasseLag)||0));
+    const rs=Math.max(sched.start + (parseInt(m.repasseLag)||0), t0);
+    const rdur=Math.max(1, salesEnd-rs+1);
+    const wIn=logisticWeights(rdur, num(m.vendaK)||5);
+    for(let i=0;i<rdur;i++){ const idx=rs+i-t0; if(idx>=0&&idx<n) inn[idx]+=obra.receita*wIn[i]; }
+  } else {
+    // no schedule: spread evenly
+    for(let i=0;i<n;i++){ out[i]+=obra.saidas/n; inn[i]+=obra.receita/n; }
+  }
+  const cumRaw=[]; let acc=0; const net=[];
+  for(let i=0;i<n;i++){ const nt=inn[i]-out[i]; net.push(nt); acc+=nt; cumRaw.push(acc); }
+  // calibrate the negative excursion so the trough matches the reported exposição
+  const rawTrough=Math.min(...cumRaw,0);
+  const factor=(obra.exposicao>0 && rawTrough<0) ? obra.exposicao/(-rawTrough) : 1;
+  const cum=cumRaw.map(v=> v<0 ? v*factor : v);
+  const trough=Math.min(...cum,0);
+  const monthlyIrr=irrMonthly(net);
+  const tirModel = monthlyIrr==null?null:(Math.pow(1+monthlyIrr,12)-1)*100;
+  return {cum, out, inn, net, exposModel:-trough, tirModel, troughIdx:cum.indexOf(trough)};
+}
+function portfolioHorizon(){
+  let t0=Infinity, T=-Infinity;
+  const db=monthIndex(state.dataBase&&state.dataBase.length>=7? (function(){
+    // dataBase like 08/06/2026 -> jun/26
+    const p=state.dataBase.split("/"); if(p.length===3) return MESES[parseInt(p[1])-1]+"/"+p[2].slice(2); return null;})() : state.mesRef) ;
+  if(db!=null){ t0=Math.min(t0,db); }
+  state.obras.forEach(o=>{ const s=parseObras(o.obras); if(s){ t0=Math.min(t0,s.start); T=Math.max(T,s.end); } });
+  if(!isFinite(t0)) t0=monthIndex("jun/26");
+  if(!isFinite(T)) T=t0+36;
+  T = T + (parseInt(state.model.tailMeses)||0) + (parseInt(state.model.repasseLag)||0);
+  return {t0,T};
+}
+
+/* ---------------- OVERVIEW ---------------- */
+function renderOverview(){
+  const t = totals();
+  $("#dbLabel").textContent = " · data-base "+(state.dataBase||"—");
+  const margem = t.receita ? (t.resultado/t.receita*100) : 0;
+  const kpis = [
+    {lab:"Obras", val:state.obras.length, sub:"empreendimentos"},
+    {lab:"Unidades", val:fmtInt(t.unidades), sub:"consolidadas"},
+    {lab:"VGV (data-base)", val:money(t.vgv), sub:"valor geral de vendas"},
+    {lab:"Receita a incorrer", val:money(t.receita), sub:"~100% após data-base"},
+    {lab:"Saídas a incorrer", val:money(t.saidas), sub:"obras, permuta, impostos…"},
+    {lab:"Resultado líquido", val:money(t.resultado), sub:"margem "+fmt(margem,1)+"%", cls:"good"},
+    {lab:"Exposição máx. somada", val:money(t.exposicao), sub:"pico de caixa a investir", cls:"warn"},
+    {lab:"Já incorrido", val:money(t.jaIncorrido), sub:fmt(t.saidas? t.jaIncorrido/(t.saidas+t.jaIncorrido)*100:0,1)+"% das saídas"}
+  ];
+  $("#kpis").innerHTML = kpis.map(k=>`
+    <div class="kpi ${k.cls||''}">
+      <div class="lab">${k.lab}</div><div class="val">${k.val}</div><div class="sub">${k.sub}</div>
+    </div>`).join("");
+
+  bars("#barResultado", state.obras.map(o=>({name:o.nome,v:resultado(o)})), "g", v=>money(v));
+  bars("#barExposicao", state.obras.map(o=>({name:o.nome,v:o.exposicao})), "a", v=>money(v));
+  bars("#barUnid", state.obras.map(o=>({name:o.nome,v:o.unidades})), "", v=>fmtInt(v));
+  barsPair("#barRecSai", state.obras.map(o=>({name:o.nome,a:o.receita,b:o.saidas})));
+}
+function bars(sel, data, cls, label){
+  const max = Math.max(1,...data.map(d=>Math.abs(d.v)));
+  $(sel).innerHTML = data.map(d=>`
+    <div class="barrow">
+      <div class="name" title="${d.name}">${d.name}</div>
+      <div class="track"><div class="fill ${cls}" style="width:${Math.max(2,Math.abs(d.v)/max*100)}%"></div></div>
+      <div class="num">${label(d.v)}</div>
+    </div>`).join("");
+}
+function barsPair(sel, data){
+  const max = Math.max(1,...data.map(d=>Math.max(d.a,d.b)));
+  $(sel).innerHTML = data.map(d=>`
+    <div class="barrow" style="grid-template-columns:120px 1fr auto">
+      <div class="name" title="${d.name}">${d.name}</div>
+      <div>
+        <div class="track" style="height:11px;margin-bottom:3px"><div class="fill g" style="width:${d.a/max*100}%"></div></div>
+        <div class="track" style="height:11px"><div class="fill r" style="width:${d.b/max*100}%"></div></div>
+      </div>
+      <div class="num" style="min-width:130px">${money(d.a)} <span style="color:var(--mut2)">/</span> ${money(d.b)}</div>
+    </div>`).join("");
+}
+
+/* ---------------- TABLE ---------------- */
+function tirPill(tir){ const cls = tir>=150?'g':tir>=100?'a':'r'; return `<span class="pill ${cls}">${fmt(tir,1)}%</span>`; }
+function renderTable(){
+  const b = $("#tblBody");
+  b.innerHTML = state.obras.map(o=>`
+    <tr>
+      <td><b>${o.nome}</b><span class="uf">${o.uf||''}</span></td>
+      <td>${fmtInt(o.unidades)}</td>
+      <td>${fmt(o.vgv,1)}</td>
+      <td>${fmt(o.receita,1)}</td>
+      <td>${fmt(o.saidas,1)}</td>
+      <td>${fmt(o.jaIncorrido,1)}</td>
+      <td style="color:var(--green);font-weight:700">${fmt(resultado(o),1)}</td>
+      <td>${fmt(o.exposicao,1)}</td>
+      <td>${tirPill(o.tir)}</td>
+      <td>${fmt(multiplo(o),2)}x</td>
+      <td style="color:var(--mut)">${o.obras||'—'}</td>
+    </tr>`).join("");
+  const t = totals();
+  const multCons = t.exposicao>0 ? t.resultado/t.exposicao+1 : 0;
+  $("#tblFoot").innerHTML = `
+    <tr>
+      <td>CONSOLIDADO (${state.obras.length})</td>
+      <td>${fmtInt(t.unidades)}</td>
+      <td>${fmt(t.vgv,1)}</td>
+      <td>${fmt(t.receita,1)}</td>
+      <td>${fmt(t.saidas,1)}</td>
+      <td>${fmt(t.jaIncorrido,1)}</td>
+      <td style="color:var(--green)">${fmt(t.resultado,1)}</td>
+      <td>${fmt(t.exposicao,1)}</td>
+      <td>—</td><td>${fmt(multCons,2)}x</td><td></td>
+    </tr>`;
+}
+
+/* ---------------- OBRA EDITOR CARDS ---------------- */
+const FIELDS = [
+  {k:"unidades", l:"Unidades", dec:0},
+  {k:"vgv", l:"VGV (R$ mi)", dec:1},
+  {k:"receita", l:"Receita a incorrer", dec:1},
+  {k:"saidas", l:"Saídas a incorrer", dec:1},
+  {k:"jaIncorrido", l:"Já incorrido", dec:1},
+  {k:"exposicao", l:"Exposição máx.", dec:1},
+  {k:"tir", l:"TIR a.a. (%)", dec:1}
+];
+function renderObras(){
+  const q = ($("#obraSearch")?.value||"").toLowerCase();
+  const grid = $("#obraGrid");
+  const list = state.obras.filter(o=>o.nome.toLowerCase().includes(q)||(o.uf||'').toLowerCase().includes(q));
+  $("#editHint").textContent = `${state.obras.length} obra(s) · resultado e múltiplo recalculam ao editar`;
+  grid.innerHTML = list.map(o=>{
+    const i = state.obras.indexOf(o);
+    return `
+    <div class="obracard">
+      <div class="oh">
+        <div class="idx">${i+1}</div>
+        <input value="${escapeAttr(o.nome)}" onchange="upd(${i},'nome',this.value,true)" style="flex:1;background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 9px;font:inherit;font-weight:700"/>
+        <input value="${escapeAttr(o.uf||'')}" onchange="upd(${i},'uf',this.value,true)" style="width:52px;text-align:center;background:var(--bg);border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:6px;font:inherit"/>
+      </div>
+      <div class="frow">
+        ${FIELDS.map(f=>`
+          <div class="field">
+            <label>${f.l}</label>
+            <input inputmode="decimal" value="${fmt(o[f.k],f.dec)}" onchange="upd(${i},'${f.k}',this.value)">
+          </div>`).join("")}
+        <div class="field">
+          <label>Múltiplo (calc.)</label>
+          <input value="${fmt(multiplo(o),2)}x" readonly title="Resultado ÷ Exposição + 1">
+        </div>
+        <div class="field full">
+          <label>Cronograma de obras (mês/aa – mês/aa)</label>
+          <input value="${escapeAttr(o.obras||'')}" onchange="upd(${i},'obras',this.value,true)">
+        </div>
+      </div>
+      <div class="ofoot">
+        <div class="calcbox">Resultado calculado<br><b>${money(resultado(o))}</b></div>
+        <button class="sm danger" onclick="removeObra(${i})">Excluir obra</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+function escapeAttr(s){ return String(s).replace(/"/g,'&quot;'); }
+function upd(i, key, val, isText){
+  state.obras[i][key] = isText ? val : num(val);
+  save(); renderAll();
+}
+function addObra(){
+  const n = state.obras.length+1;
+  state.obras.push({id:"obra"+Date.now(), nome:"Nova obra "+n, uf:"", unidades:0, vgv:0, receita:0,
+    saidas:0, jaIncorrido:0, exposicao:0, tir:0, obras:"", pctObra:0, unidVend:0, recReal:0, saiReal:0});
+  save(); renderAll(); toast("Obra adicionada — preencha as premissas.");
+  setTab("obras");
+  setTimeout(()=>{ const cards=$$(".obracard"); const last=cards[cards.length-1]; last&&last.scrollIntoView({behavior:"smooth",block:"center"}); },60);
+}
+function removeObra(i){
+  if(!confirm(`Excluir a obra "${state.obras[i].nome}"? Esta ação não pode ser desfeita.`)) return;
+  state.obras.splice(i,1); save(); renderAll(); toast("Obra excluída.");
+}
+
+/* ---------------- CURVA DE CAIXA ---------------- */
+function renderCurvaSelect(){
+  const sel=$("#curvaSel");
+  const cur=sel.value||"__port__";
+  sel.innerHTML = `<option value="__port__">Portfólio (consolidado)</option>` +
+    state.obras.map((o,i)=>`<option value="${i}">${o.nome} (${o.uf||''})</option>`).join("");
+  sel.value = cur;
+}
+function renderCurva(){
+  renderCurvaSelect();
+  const {t0,T}=portfolioHorizon();
+  const n=T-t0+1;
+  const sel=$("#curvaSel").value;
+  let cum, exposModel, tirModel, title, reportedExpos, reportedTir;
+  if(sel==="__port__"){
+    const agg=new Array(n).fill(0); const net=new Array(n).fill(0);
+    state.obras.forEach(o=>{ const c=buildCurve(o,t0,T); for(let i=0;i<n;i++){ agg[i]+=c.cum[i]; net[i]+=c.net[i]; } });
+    cum=agg;
+    exposModel=-Math.min(...cum,0);
+    const mi=irrMonthly(net); tirModel = mi==null?null:(Math.pow(1+mi,12)-1)*100;
+    const t=totals(); reportedExpos=t.exposicao; reportedTir=null;
+    title="Portfólio consolidado — caixa acumulado";
+  } else {
+    const o=state.obras[+sel]; const c=buildCurve(o,t0,T);
+    cum=c.cum; exposModel=c.exposModel; tirModel=c.tirModel;
+    reportedExpos=o.exposicao; reportedTir=o.tir;
+    title=`${o.nome} — caixa acumulado`;
+  }
+  $("#curvaTitle").textContent = title+" (nominal)";
+  drawChart(cum, t0);
+  const stats=[
+    {l:"Pico de exposição (curva)", v:money(exposModel)},
+    {l:"Exposição — relatório", v:reportedExpos!=null?money(reportedExpos):"—"},
+    {l:"TIR a.a. — relatório", v:reportedTir!=null?fmt(reportedTir,1)+"%":"—"},
+    {l:"TIR a.a. — modelo (ilustr.)", v:tirModel==null?"n/d":fmt(tirModel,1)+"%"},
+    {l:"Caixa final (resultado)", v:money(cum[cum.length-1])}
+  ];
+  $("#curvaStats").innerHTML = stats.map(s=>`<div class="mstat"><div class="l">${s.l}</div><div class="v">${s.v}</div></div>`).join("");
+}
+function drawChart(cum, t0){
+  const W=900,H=340, padL=54,padR=12,padT=14,padB=26;
+  const n=cum.length;
+  const maxV=Math.max(0,...cum), minV=Math.min(0,...cum);
+  const span=(maxV-minV)||1;
+  const x=i=> padL + (n<=1?0:i/(n-1))*(W-padL-padR);
+  const y=v=> padT + (maxV-v)/span*(H-padT-padB);
+  const zeroY=y(0);
+  // area path
+  let d=`M ${x(0)} ${zeroY}`;
+  for(let i=0;i<n;i++) d+=` L ${x(i).toFixed(1)} ${y(cum[i]).toFixed(1)}`;
+  d+=` L ${x(n-1)} ${zeroY} Z`;
+  let line=`M ${x(0)} ${y(cum[0]).toFixed(1)}`;
+  for(let i=1;i<n;i++) line+=` L ${x(i).toFixed(1)} ${y(cum[i]).toFixed(1)}`;
+  const troughIdx=cum.indexOf(Math.min(...cum));
+  // x ticks (~7)
+  const step=Math.max(1,Math.round(n/7)); let ticks="";
+  for(let i=0;i<n;i+=step){ ticks+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${idxToLabel(t0+i)}</text>`; }
+  // y ticks
+  let yt=""; const yc=4;
+  for(let g=0;g<=yc;g++){ const v=minV+(span)*g/yc; const yy=y(v); yt+=`<line class="axis" x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" opacity=".25"/><text x="${padL-6}" y="${yy+3}" text-anchor="end">${fmt(v,0)}</text>`; }
+  const svg=`
+    <defs>
+      <linearGradient id="gradNeg" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#4f8cff" stop-opacity=".35"/>
+        <stop offset="1" stop-color="#4f8cff" stop-opacity=".05"/>
+      </linearGradient>
+    </defs>
+    ${yt}
+    <line class="zero" x1="${padL}" y1="${zeroY}" x2="${W-padR}" y2="${zeroY}"/>
+    <path class="areaNeg" d="${d}"/>
+    <path class="lineP" d="${line}"/>
+    <circle class="trough" cx="${x(troughIdx)}" cy="${y(cum[troughIdx])}" r="4"/>
+    <text class="trough" x="${x(troughIdx)}" y="${y(cum[troughIdx])+16}" text-anchor="middle" fill="#ff8a8f">${money(cum[troughIdx])}</text>
+    ${ticks}`;
+  $("#curvaSvg").innerHTML=svg;
+}
+
+/* ---------------- ACOMPANHAMENTO ---------------- */
+function velocidade(){ return num(state.globals["Velocidade de vendas (un./mês)"])||0; }
+function metaObra(o){
+  const sched=parseObras(o.obras); const ref=monthIndex(state.mesRef);
+  if(!sched||ref==null) return 0;
+  const start=sched.start; // vendas ~ início de obra
+  const meses=Math.max(0, ref-start+1);
+  // distribui a velocidade global proporcional à participação da obra em unidades
+  const t=totals(); const share=t.unidades? o.unidades/t.unidades : 0;
+  return Math.min(o.unidades, Math.round(velocidade()*share*meses));
+}
+function renderAcomp(){
+  $("#mesRef").value = state.mesRef||"";
+  const t = totals();
+  const resReal = t.recReal - t.saiReal;
+  let metaTot=0; state.obras.forEach(o=>metaTot+=metaObra(o));
+  const k = [
+    {lab:"Unidades vendidas", val:fmtInt(t.unidVend), sub:fmt(t.unidades? t.unidVend/t.unidades*100:0,1)+"% do total"},
+    {lab:"Meta acum. (até ref.)", val:fmtInt(metaTot), sub:"atingido "+fmt(metaTot? t.unidVend/metaTot*100:0,1)+"%"},
+    {lab:"Receita realizada", val:money(t.recReal), sub:fmt(t.receita? t.recReal/t.receita*100:0,1)+"% da prevista"},
+    {lab:"Resultado realizado", val:money(resReal), sub:fmt(t.resultado? resReal/t.resultado*100:0,1)+"% do projetado", cls:resReal>=0?"good":"warn"}
+  ];
+  $("#acompKpis").innerHTML = k.map(x=>`<div class="kpi ${x.cls||''}"><div class="lab">${x.lab}</div><div class="val">${x.val}</div><div class="sub">${x.sub}</div></div>`).join("");
+
+  $("#acompBody").innerHTML = state.obras.map((o,i)=>{
+    const meta=metaObra(o);
+    const atg = meta? (o.unidVend||0)/meta*100 : 0;
+    const rr = (o.recReal||0)-(o.saiReal||0);
+    return `<tr>
+      <td><b>${o.nome}</b><span class="uf">${o.uf||''}</span></td>
+      <td><input inputmode="decimal" class="prem-input" style="width:70px" value="${fmt(o.pctObra||0,0)}" onchange="updAc(${i},'pctObra',this.value)"> %</td>
+      <td><input inputmode="numeric" class="prem-input" style="width:80px" value="${fmtInt(o.unidVend||0)}" onchange="updAc(${i},'unidVend',this.value)"></td>
+      <td style="color:var(--mut)">${fmtInt(meta)}</td>
+      <td><input inputmode="decimal" class="prem-input" style="width:90px" value="${fmt(o.recReal||0,1)}" onchange="updAc(${i},'recReal',this.value)"></td>
+      <td><input inputmode="decimal" class="prem-input" style="width:90px" value="${fmt(o.saiReal||0,1)}" onchange="updAc(${i},'saiReal',this.value)"></td>
+      <td style="min-width:170px"><div class="miniprog"><i style="width:${Math.min(100,atg)}%;background:${atg>=100?'linear-gradient(90deg,#22a862,#2fbf71)':atg>=60?'linear-gradient(90deg,#d99321,#f2b23e)':'linear-gradient(90deg,#c9434a,#f2555a)'}"></i></div><span style="font-size:11px;color:var(--mut2)">${fmt(atg,0)}% · ${fmtInt(o.unidVend||0)}/${fmtInt(meta)}</span></td>
+      <td style="color:${rr>=0?'var(--green)':'var(--red)'};font-weight:700">${fmt(rr,1)}</td>
+    </tr>`;
+  }).join("");
+}
+function updAc(i,key,val){ state.obras[i][key] = key==='unidVend'? Math.round(num(val)) : num(val); save(); renderAcomp(); }
+function setMesRef(v){ state.mesRef=v; save(); renderAcomp(); }
+
+/* ---------------- PARÂMETROS ---------------- */
+function renderGlobals(){
+  const g = state.globals||{};
+  $("#globalParams").innerHTML = Object.keys(g).map(key=>`
+    <div class="field"><label>${key}</label>
+      <input value="${escapeAttr(g[key])}" onchange="updGlobal('${escapeAttr(key)}',this.value)"></div>`).join("");
+  const m=state.model;
+  $("#mp_obra").value=m.obraK; $("#mp_venda").value=m.vendaK; $("#mp_repasse").value=m.repasseLag; $("#mp_tail").value=m.tailMeses;
+}
+function updGlobal(key,val){
+  state.globals[key]=val;
+  if(key==="Data-base") state.dataBase=val;
+  save(); renderOverview(); renderAcomp(); toast("Premissa atualizada.");
+}
+function setModel(key,val){ state.model[key]= key==='repasseLag'||key==='tailMeses'? Math.round(num(val)) : num(val); save(); toast("Parâmetro do modelo atualizado."); if($("#tab-curva").classList.contains("active")) renderCurva(); }
+
+/* ---------------- tabs / render ---------------- */
+function setTab(name){
+  $$("#tabs button").forEach(b=>b.classList.toggle("active", b.dataset.tab===name));
+  $$(".tab").forEach(s=>s.classList.toggle("active", s.id==="tab-"+name));
+  if(name==="acomp") renderAcomp();
+  if(name==="overview") renderOverview();
+  if(name==="curva") renderCurva();
+}
+$$("#tabs button").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
+function renderAll(){ renderOverview(); renderTable(); renderObras(); renderAcomp(); renderGlobals(); if($("#tab-curva")?.classList.contains("active")) renderCurva(); }
+
+/* ---------------- import / export / reset ---------------- */
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = "brcasas_fluxo_caixa.json"; a.click(); URL.revokeObjectURL(a.href); toast("Dados exportados.");
+}
+function importJSON(ev){
+  const file = ev.target.files[0]; if(!file) return;
+  const r = new FileReader();
+  r.onload = e=>{
+    try{ const d = JSON.parse(e.target.result); if(!d.obras || !Array.isArray(d.obras)) throw new Error("formato");
+      state = migrate(d); save(); renderAll(); toast("Dados importados com sucesso.");
+    }catch(err){ alert("Arquivo inválido. Selecione um JSON exportado pelo painel."); }
+  };
+  r.readAsText(file); ev.target.value="";
+}
+function resetData(){
+  if(!confirm("Restaurar os dados padrão das 9 obras? Suas edições locais serão perdidas.")) return;
+  state = structuredClone(SEED); save(); renderAll(); toast("Dados restaurados ao padrão.");
+}
+
+/* init */
+renderCurvaSelect();
+renderAll();
+</script>
+</body>
+</html>
